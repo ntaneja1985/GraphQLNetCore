@@ -137,14 +137,189 @@ fragment RepositoryCommonFields on Repository{
   ```
   - We can specify variables like this 
   ```c#
-  {
-	"input":{
-    "ownerId": "U_kgDOBY34TA",
-    "name": "MyFirstGraphQLProject",
-    "body": "First project via mutation",
-    "clientMutationId": "123456789"
-  }
-}
+    {
+	  "input":{
+      "ownerId": "U_kgDOBY34TA",
+      "name": "MyFirstGraphQLProject",
+      "body": "First project via mutation",
+      "clientMutationId": "123456789"
+      }
+    
 
   ```
+   ## Integrating GraphQL with .NET Core 
+  - ![alt text](image-6.png)
+  - Install GraphQL.Server.Transports.AspNetCore package
+  - We will also install GraphiQL package. This package transforms our web browser into a graphical playground. 
+  - Helps to test our GraphQL endpoints for the web browser.
+  - Please note GraphQL doesnot understand our model classes. Instead it understands types, so our GraphQL endpoints need to return data based on these types.
+  - We must establish mapping between our Model Classes and GraphQL types.
+  - This can be done as follows. Lets say we have the following Model Class :
+  ```c#
+  public class Menu
+  {
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Description { get; set; }
+    public double Price { get; set; }
+  }
+
+  ```
+  - Now we can define a GraphQL type like this which maps from Menu Class 
+```c#
+ public class MenuType : ObjectGraphType<Menu>
+{
+    public MenuType()
+    {
+        Field(x => x.Id);
+        Field(x => x.Name);
+        Field(x => x.Description);
+        Field(x=>x.Price);
+    }
+}
+
+```
+- In case we have more than model class, we need to setup GraphQL types for each of the additional classes.
+
+### Working with GraphQL queries
+- Here is the mapping between GraphQL datatypes and c# data type 
+```c#
+![alt text](image-7.png)
+
+```
+- Graph QL queries can be written like this 
+```c#
+ public class MenuQuery : ObjectGraphType
+{
+    public MenuQuery(IMenuRepository menuRepository)
+    {
+        Field<ListGraphType<MenuType>>("Menus").Resolve(context =>
+        {
+            return menuRepository.GetAllMenus();
+        });
+        Field<MenuType>("Menu").Arguments(new QueryArguments(new QueryArgument<IntGraphType> {Name = "menuId" })).Resolve(context =>
+        {
+            return menuRepository.GetMenuById(context.GetArgument<int>("menuId"));
+        });
+    }
+    
+}
+
+
+```
+
+### GraphQL schemas 
+- In GraphQL schema we have queries and mutations. 
+- We need to resolve queries in GraphQL schema
+- We can register our GraphQL queries within the schema like this 
+```c#
+ public class MenuSchema: GraphQL.Types.Schema
+{
+    public MenuSchema(MenuQuery menuQuery)
+    {
+        Query = menuQuery;
+    }
+}
+
+
+```
+### Registering GraphQL in Program.cs 
+- This can be done as follows:
+```c#
+ builder.Services.AddControllers();
+builder.Services.AddTransient<IMenuRepository,MenuRepository>();
+builder.Services.AddTransient<MenuType>();
+builder.Services.AddTransient<MenuQuery>();
+builder.Services.AddTransient<ISchema, MenuSchema>();
+//Autogenerate the schema based on specified schema interface or type
+//Also we want the response in JSON format.
+builder.Services.AddGraphQL(b => b.AddAutoSchema<ISchema>().AddSystemTextJson());
+
+```
+- We also need to define a graphical playground middleware to our request pipeline. Here we will pass the path that will be used to open the GraphQL playground for playing GraphQL queries inside our browser. 
+- Consider the GraphQL path like a route URL .
+- ![alt text](image-8.png)
+```c#
+ //Here on this path the graphical playground is opened
+  app.UseGraphiQl("/graphql");
+  app.UseGraphQL<ISchema>();
+
+```
+- ![alt text](image-9.png)
+
+### GraphQL Mutations
+- Since add Menu will contain an input of type menu we need to define a menu input type as follows: 
+```c#
+
+ public class MenuInputType: InputObjectGraphType
+{
+    public MenuInputType()
+    {
+        Field<IntGraphType>("id");
+        Field<StringGraphType>("name");
+        Field<StringGraphType>("description");
+        Field<FloatGraphType>("price"); 
+
+    }
+}
+
+```
+- Now we need to define a class called MenuMutations 
+  ```c#
+   public class MenuMutation : ObjectGraphType
+  {
+    public MenuMutation(IMenuRepository menuRepository) 
+     {
+        Field<MenuType>("CreateMenu").Arguments(new QueryArguments(new QueryArgument<MenuInputType> { Name = "menu" })).Resolve(context =>
+        {
+            return menuRepository.AddMenu(context.GetArgument<Menu>("menu"));
+        });
+
+        Field<MenuType>("UpdateMenu").Arguments(new QueryArguments(new QueryArgument<IntGraphType> { Name = "menuId" }, new QueryArgument<MenuInputType> { Name = "menu" })).Resolve(context =>
+        {
+            return menuRepository.UpdateMenu(context.GetArgument<int>("menuId"),context.GetArgument<Menu>("menu"));
+        });
+
+        Field<BooleanGraphType>("DeleteMenu").Arguments(new QueryArguments(new QueryArgument<IntGraphType> { Name = "menuId" })).Resolve(context =>
+        {
+             menuRepository.DeleteMenu(context.GetArgument<int>("menuId"));
+             return true;
+        });
+
+
+      }
+  }
+
+
+  ```
+  - Now we need to register these mutations in the MenuSchema like this 
+  ```c#
+  public class MenuSchema: GraphQL.Types.Schema
+  {
+    public MenuSchema(MenuQuery menuQuery, MenuMutation menuMutation)
+    {
+        Query = menuQuery;
+        Mutation = menuMutation;
+    }
+  }
+
+
+  ```
+  - Finally we need to register all this in the Program.cs file like this 
+  ```c#
+  builder.Services.AddTransient<IMenuRepository,MenuRepository>();
+  builder.Services.AddTransient<MenuType>();
+  builder.Services.AddTransient<MenuQuery>();
+  builder.Services.AddTransient<MenuMutation>();
+  builder.Services.AddTransient<MenuInputType>();
+  builder.Services.AddTransient<ISchema, MenuSchema>();
+  builder.Services.AddGraphQL(b => b.AddAutoSchema<ISchema>().AddSystemTextJson());
+
+  ```
+  - ![alt text](image-10.png)
+  - ![alt text](image-11.png)
+  - ![alt text](image-12.png)
+
+
+ 
   
