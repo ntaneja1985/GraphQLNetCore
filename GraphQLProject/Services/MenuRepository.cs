@@ -1,48 +1,45 @@
-﻿using GraphQLProject.Interfaces;
+﻿using GraphQLProject.Data;
+using GraphQLProject.Interfaces;
 using GraphQLProject.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace GraphQLProject.Services
 {
-    public class MenuRepository : IMenuRepository
+    public class MenuRepository(GraphQLDBContext context) : IMenuRepository
     {
-        private static List<Menu> MenuList = new List<Menu>()
+        
+        public async Task<Menu> AddMenu(Menu menu)
         {
-            new Menu() {Id = 1, Name="Classic Burger 0", Description="Veg Burger 0", Price=8.99},
-            new Menu() {Id = 2, Name="Classic Burger 1", Description="Veg Burger 1", Price=7.99},
-            new Menu() {Id = 3, Name="Classic Burger 2", Description="Veg Burger 2", Price=6.99},
-            new Menu() {Id = 4, Name="Classic Burger 3", Description="Veg Burger 3", Price=5.99},
-            new Menu() {Id = 5, Name="Classic Burger 4", Description="Veg Burger 4", Price=4.99},
-            new Menu() {Id = 6, Name="Classic Burger 5", Description="Veg Burger 5", Price=3.99},
-        };
-        public Menu AddMenu(Menu menu)
-        {
-            MenuList.Add(menu);
+            await context.Menus.AddAsync(menu);
+            await context.SaveChangesAsync();
             return menu;
         }
 
-        public void DeleteMenu(int id)
+        public async Task DeleteMenu(int id)
         {
-            var foundMenu = MenuList.Find(x => x.Id == id);
-            MenuList.Remove(foundMenu);
+            var foundMenu = await context.Menus.FindAsync(id);
+            context.Menus.Remove(foundMenu);
+            await context.SaveChangesAsync();
         }
 
-        public List<Menu> GetAllMenus()
+        public async Task<List<Menu>> GetAllMenus()
         {
-            return MenuList;
+            return await context.Menus.ToListAsync();
         }
 
-        public Menu GetMenuById(int id)
+        public async Task<Menu> GetMenuById(int id)
         {
-            return MenuList.Find(x=>x.Id == id);
+            return await context.Menus.FindAsync(id);
         }
 
-        public Menu UpdateMenu(int id, Menu menu)
+        public async Task<Menu> UpdateMenu(int id, Menu menu)
         {
-            var foundMenu = MenuList.Find(x => x.Id == id);
+            var foundMenu = await context.Menus.FindAsync(id);
             foundMenu.Name = menu.Name;
             foundMenu.Description = menu.Description;
             foundMenu.Price = menu.Price;
-            return menu;
+            await context.SaveChangesAsync();
+            return foundMenu;
         }
     }
 }

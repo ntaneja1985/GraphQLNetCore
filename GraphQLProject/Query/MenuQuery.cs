@@ -11,11 +11,11 @@ namespace GraphQLProject.Query
         {
             Field<ListGraphType<MenuType>>("Menus").Resolve(context =>
             {
-                return menuRepository.GetAllMenus();
+                return menuRepository.GetAllMenus().GetAwaiter().GetResult();
             });
             Field<MenuType>("Menu").Arguments(new QueryArguments(new QueryArgument<IntGraphType> {Name = "menuId" })).Resolve(context =>
             {
-                return menuRepository.GetMenuById(context.GetArgument<int>("menuId"));
+                return menuRepository.GetMenuById(context.GetArgument<int>("menuId")).GetAwaiter().GetResult();
             });
         }
         

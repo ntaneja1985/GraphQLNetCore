@@ -12,17 +12,17 @@ namespace GraphQLProject.Mutation
         {
             Field<MenuType>("CreateMenu").Arguments(new QueryArguments(new QueryArgument<MenuInputType> { Name = "menu" })).Resolve(context =>
             {
-                return menuRepository.AddMenu(context.GetArgument<Menu>("menu"));
+                return menuRepository.AddMenu(context.GetArgument<Menu>("menu")).GetAwaiter().GetResult();
             });
 
             Field<MenuType>("UpdateMenu").Arguments(new QueryArguments(new QueryArgument<IntGraphType> { Name = "menuId" }, new QueryArgument<MenuInputType> { Name = "menu" })).Resolve(context =>
             {
-                return menuRepository.UpdateMenu(context.GetArgument<int>("menuId"),context.GetArgument<Menu>("menu"));
+                return menuRepository.UpdateMenu(context.GetArgument<int>("menuId"),context.GetArgument<Menu>("menu")).GetAwaiter().GetResult();
             });
 
             Field<BooleanGraphType>("DeleteMenu").Arguments(new QueryArguments(new QueryArgument<IntGraphType> { Name = "menuId" })).Resolve(context =>
             {
-                 menuRepository.DeleteMenu(context.GetArgument<int>("menuId"));
+                 menuRepository.DeleteMenu(context.GetArgument<int>("menuId")).GetAwaiter().GetResult();
                  return true;
             });
 

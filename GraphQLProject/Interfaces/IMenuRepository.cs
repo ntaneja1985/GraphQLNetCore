@@ -4,12 +4,12 @@ namespace GraphQLProject.Interfaces
 {
     public interface IMenuRepository
     {
-        List<Menu> GetAllMenus();
+        Task<List<Menu>> GetAllMenus();
 
-        Menu GetMenuById(int id);
-        Menu AddMenu(Menu menu);
-        Menu UpdateMenu(int id,Menu menu);
+        Task<Menu> GetMenuById(int id);
+        Task<Menu> AddMenu(Menu menu);
+        Task<Menu> UpdateMenu(int id,Menu menu);
 
-        void DeleteMenu(int id);    
+        Task DeleteMenu(int id);    
     }
 }
