@@ -20,23 +20,25 @@ builder.Services.AddTransient<IMenuRepository,MenuRepository>();
 builder.Services.AddTransient<ICategoryRepository,CategoryRepository>();
 builder.Services.AddTransient<IReservationRepository,ReservationRepository>();
 
+//Register GraphQL Types
 builder.Services.AddTransient<MenuType>();
 builder.Services.AddTransient<CategoryType>();
 builder.Services.AddTransient<ReservationType>();
-
+//Register GraphQL Queries
 builder.Services.AddTransient<MenuQuery>();
 builder.Services.AddTransient<CategoryQuery>();
 builder.Services.AddTransient<ReservationQuery>();
 builder.Services.AddTransient<RootQuery>();
-
+//Register GraphQL Mutations
 builder.Services.AddTransient<MenuMutation>();
 builder.Services.AddTransient<CategoryMutation>();
 builder.Services.AddTransient<ReservationMutation>();
 builder.Services.AddTransient<RootMutation>();
-
+//Register GraphQL InputTypes
 builder.Services.AddTransient<MenuInputType>();
 builder.Services.AddTransient<CategoryInputType>();
 builder.Services.AddTransient<ReservationInputType>();
+//Register GraphQL Schemas
 //builder.Services.AddTransient<ISchema, MenuSchema>();
 builder.Services.AddTransient<ISchema, RootSchema>();
 
